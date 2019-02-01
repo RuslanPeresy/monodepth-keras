@@ -1,9 +1,33 @@
 from __future__ import absolute_import, division, print_function
 import numpy as np
 import tensorflow as tf
-from keras.layers import Input, Add, Activation, Conv2D
+from keras.layers import Activation, Conv2D, MaxPooling2D
+
+"""
+Module to:
+    init the set of layers
+    implement the ResNet18 model
+"""
 
 # identity
 
-def __init__():
-    
+def conv(X, kernel_size, stride):
+    p = np.floor((kernel_size - 1)/2).astype(np.int32)
+    X = Conv2D(kernel_size=kernel_size, stride=stride, padding=[[0, 0], [p, p], [p, p], [0, 0]])(X)
+    X = Activation('elu')(X)
+    return X
+
+def conv_block(X, kernel_size):
+    conv1 = conv(X, kernel_size, 1)
+    conv2 = conv(conv1, kernel_size, 2)
+    return conv2
+
+def maxpool(X, kernel_size):
+    p = np.floor((kernel_size - 1) / 2).astype(np.int32)
+    max_pool2d = MaxPooling2D(kernel_size=kernel_size, padding=[[0, 0], [p, p], [p, p], [0, 0]])(X)
+    return max_pool2d
+
+
+
+
+
