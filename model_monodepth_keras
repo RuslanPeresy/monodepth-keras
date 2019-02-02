@@ -1,7 +1,7 @@
 from __future__ import absolute_import, division, print_function
 import numpy as np
 import tensorflow as tf
-from keras.layers import Activation, Conv2D, MaxPooling2D
+from keras.layers import Add, Activation, Conv2D, MaxPooling2D, UpSampling2D, Conv2DTranspose
 
 """
 Module to:
@@ -26,6 +26,45 @@ def maxpool(X, kernel_size):
     p = np.floor((kernel_size - 1) / 2).astype(np.int32)
     max_pool2d = MaxPooling2D(kernel_size=kernel_size, padding=[[0, 0], [p, p], [p, p], [0, 0]])(X)
     return max_pool2d
+
+def resconv(X, stride):
+    do_proj = False
+    # do_proj = tf.shape[3] != '''number of output layers''' or stride == 2
+    conv1 = conv(X, 1, 1)
+    conv2 = conv(conv1, 3, stride)
+    conv3 = conv(conv2, 1, 1)
+    if do_proj:
+        X_shortcut = conv(X, 1, stride)
+    else:
+        X_shortcut = X
+    X_resconv = Add()([X_shortcut, conv3])
+    X_resconv = Activation('elu')(X_resconv)
+    return X_resconv
+
+def resblock(X, num_blocks):
+    out = X
+    for i in range(num_blocks - 1):
+        out = resconv(out, 1)
+    out = resconv(out, 2)
+    return out
+
+def upconv(X, kernel_size, size):
+    upsample = UpSampling2D(X, size=size)(X)
+    X_conv = conv(upsample, kernel_size, 1)
+    return X_conv
+
+def deconv(X, kernel_size, strides):
+    p_x = tf.pad(X, [[0, 0], [1, 1], [1, 1], [0, 0]])
+    X_conv = Conv2DTranspose(kernel_size=kernel_size, strides=strides, padding='same')(p_x)
+    return X_conv[:, 3:-1, :]
+
+# build ResNet model
+
+
+
+
+
+
 
 
 
