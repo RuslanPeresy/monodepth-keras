@@ -28,8 +28,7 @@ def maxpool(X, kernel_size):
     return max_pool2d
 
 def resconv(X, filters, stride):
-    do_proj = False
-    # do_proj = tf.shape[3] != '''number of output layers''' or stride == 2
+    do_proj = tf.shape(X)[3] != filters or stride == 2
     conv1 = conv(X, filters, 1, 1)
     conv2 = conv(conv1, filters, 3, stride)
     conv3 = conv(conv2, 4 * filters, 1, 1, None)
