@@ -6,20 +6,20 @@ from keras.layers import Add, Activation, Conv2D, MaxPooling2D, UpSampling2D, Co
 """
 Module to:
     init the set of layers
-    implement the ResNet18 model
+    implement the ResNet model
 """
 
 # identity
 
-def conv(X, kernel_size, stride):
+def conv(X, filters, kernel_size, stride, activation_fn = 'elu'):
     p = np.floor((kernel_size - 1)/2).astype(np.int32)
-    X = Conv2D(kernel_size=kernel_size, stride=stride, padding=[[0, 0], [p, p], [p, p], [0, 0]])(X)
-    X = Activation('elu')(X)
+    X = Conv2D(filters=filters, kernel_size=kernel_size, stride=stride, padding=[[0, 0], [p, p], [p, p], [0, 0]])(X)
+    X = Activation(activation_fn)(X)
     return X
 
-def conv_block(X, kernel_size):
-    conv1 = conv(X, kernel_size, 1)
-    conv2 = conv(conv1, kernel_size, 2)
+def conv_block(X, filters, kernel_size):
+    conv1 = conv(X, filters, kernel_size, 1)
+    conv2 = conv(conv1, filters, kernel_size, 2)
     return conv2
 
 def maxpool(X, kernel_size):
@@ -27,36 +27,36 @@ def maxpool(X, kernel_size):
     max_pool2d = MaxPooling2D(kernel_size=kernel_size, padding=[[0, 0], [p, p], [p, p], [0, 0]])(X)
     return max_pool2d
 
-def resconv(X, stride):
+def resconv(X, filters, stride):
     do_proj = False
     # do_proj = tf.shape[3] != '''number of output layers''' or stride == 2
-    conv1 = conv(X, 1, 1)
-    conv2 = conv(conv1, 3, stride)
-    conv3 = conv(conv2, 1, 1)
+    conv1 = conv(X, filters, 1, 1)
+    conv2 = conv(conv1, filters, 3, stride)
+    conv3 = conv(conv2, 4 * filters, 1, 1, None)
     if do_proj:
-        X_shortcut = conv(X, 1, stride)
+        X_shortcut = conv(X, 4 * filters, 1, stride, None)
     else:
         X_shortcut = X
     X_resconv = Add()([X_shortcut, conv3])
     X_resconv = Activation('elu')(X_resconv)
     return X_resconv
 
-def resblock(X, num_blocks):
+def resblock(X, filters, num_blocks):
     out = X
     for i in range(num_blocks - 1):
         out = resconv(out, 1)
-    out = resconv(out, 2)
+    out = resconv(out, filters, 2)
     return out
 
-def upconv(X, kernel_size, size):
-    upsample = UpSampling2D(X, size=size)(X)
-    X_conv = conv(upsample, kernel_size, 1)
+def upconv(X, filters, kernel_size, size):
+    upsample = UpSampling2D(size=size)(X)
+    X_conv = conv(upsample, filters, kernel_size, 1)
     return X_conv
 
-def deconv(X, kernel_size, strides):
+def deconv(X, filters, kernel_size, strides):
     p_x = tf.pad(X, [[0, 0], [1, 1], [1, 1], [0, 0]])
-    X_conv = Conv2DTranspose(kernel_size=kernel_size, strides=strides, padding='same')(p_x)
-    return X_conv[3:-1, :]
+    X_conv = Conv2DTranspose(filters=filters, kernel_size=kernel_size, strides=strides, padding='same')(p_x)
+    return X_conv[3:-1, 3:-1, :]    # ?
 
 # build ResNet model
 
