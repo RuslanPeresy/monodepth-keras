@@ -6,5 +6,5 @@ pip3 install -e .
 
 clone or download the repository https://github.com/RuslanPeresy/ml-agents
 
-from ml-agents/UnitySDK/Assets copy folders ML-Agents and Gismos to the unity_environment/Assets folder
+from ml-agents/UnitySDK/Assets copy folders ML-Agents and Gizmos to the unity_environment/Assets folder
 
