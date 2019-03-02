@@ -5,6 +5,8 @@ import numpy as np
 import tensorflow as tf
 import tensorflow.contrib.slim as slim
 
+from bilinear_sampler import *
+
 monodepth_parameters = namedtuple('parameters,'
                                   'encoder '
                                   'height, width, '
@@ -65,11 +67,11 @@ class MonodepthModel:
                 scaled_imgs.append(tf.image.resize_area(img, [nh, nw]))
             return scaled_imgs
 
-        #def generate_image_left(self, img, disp):
-        #    return bilinear_sampler_1d_h(img, -disp)
+        def generate_image_left(self, img, disp):
+            return bilinear_sampler_1d_h(img, -disp)
 
-        #def generate_image_right(self, img, disp):
-        #    return bilinear_sampler_1d_h(img, disp)
+        def generate_image_right(self, img, disp):
+            return bilinear_sampler_1d_h(img, disp)
         """
         SSIM
         Is for comparing the two images
@@ -267,9 +269,9 @@ class MonodepthModel:
                 # IMAGE RECONSTRUCTION
                 # L1
                 self.l1_left = [tf.abs(self.left_est[i] - self.left_pyramid[i]) for i in range(4)]
-                self.l1_reconstruction_loss_left = [tf.reduce_mean(1) for 1 in self.l1_left]
+                self.l1_reconstruction_loss_left = [tf.reduce_mean(l) for l in self.l1_left]
                 self.l1_right = [tf.abs(self.right_est[i] - self.right_pyramid[i]) for i in range(4)]
-                self.l1_reconstruction_loss_right = [tf.reduce_mean(1) for 1 in self.l1_right]
+                self.l1_reconstruction_loss_right = [tf.reduce_mean(l) for l in self.l1_right]
 
                 #SSIM
                 self.ssim_left = [self.SSIM(self.left_est[i], self.left_pyramid[i]) for i in range(4)]
